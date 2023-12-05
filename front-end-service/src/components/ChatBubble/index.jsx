@@ -1,8 +1,10 @@
 import { Avatar, Box, Grid, Typography } from '@mui/material'
 import React from 'react'
 
-function ChatBubble({ isSender, username, message="", time }) {
+function ChatBubble({ isSender, username, message="" }) {
   const avatar = "https://random.imagecdn.app/500/150";
+  const date = new Date();
+  const time = date.getHours() + ':' + date.getMinutes();
   return (
     <Box>
       <Grid 

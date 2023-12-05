@@ -1,8 +1,53 @@
-import { Box, Button, Container, Grid, IconButton, TextField, Typography } from '@mui/material'
-import React from 'react'
+import { Box, Button, Container, Grid, TextField, Typography } from '@mui/material';
+import React, { useEffect, useState } from 'react';
 import ChatBubble from '../../components/ChatBubble';
+import { useSocket } from '../../hooks/useSocket';
+import { getSocketResponse } from '../../service/socket';
+import { connect } from 'formik';
 
 function ChatRoom({ username, room }) {
+  const { isConnected, socketResponse, sendData } = useSocket(room, username);
+  const [messageInput, setMessageInput] = useState("");
+  const [messageList, setMessageList] = useState([]);
+
+  const addMessageToList = (val) => {
+    if (val.room === "") return;
+    setMessageList([...messageList]);
+    fetchMessage();
+  }
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (messageInput !== "") {
+      sendData({
+        message: messageInput
+      });
+      addMessageToList({
+        message: messageInput,
+        username: username,
+        createdAt: new Date(),
+        messageType: "CLIENT"
+      });
+      setMessageInput("");
+    }
+  }
+
+  const fetchMessage = () => {
+    getSocketResponse(room)
+			.then((res) => {
+				setMessageList([...res]);
+			}).catch((err) => {
+				console.log(err);
+			});
+  }
+
+  useEffect(() => {
+    fetchMessage();
+  }, []);
+
+  useEffect(() => {
+    addMessageToList(socketResponse);
+  }, [socketResponse]);
 
   return (
     <Container>
@@ -30,18 +75,22 @@ function ChatRoom({ username, room }) {
               overflow: 'auto'
             }}
           >
-            <ChatBubble 
-              isSender={false}
-              username={username}
-              message={"hi"}
-              time={"12:12"}
-            />
-            <ChatBubble 
-              isSender={true}
-              username={username}
-              message={"hi"}
-              time={"12:12"}
-            />
+            {
+              messageList.map((message) => {
+                if (message.messageType === 'CLIENT') {
+                  console.log(message);
+                  return (
+                    <ChatBubble
+                      key={message.id} 
+                      isSender={message.username === username}
+                      username={message.username}
+                      message={message.message}
+                      time={"12:12"}
+                    />
+                  )
+                } 
+              })
+            }
           </Box>
           <Grid 
             container 
@@ -56,6 +105,8 @@ function ChatRoom({ username, room }) {
               <TextField 
                 variant="standard"
                 placeholder='Type your message'
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
                 fullWidth
                 InputProps={{
                   disableUnderline: true,
@@ -67,7 +118,7 @@ function ChatRoom({ username, room }) {
             </Grid>
             <Grid item xs={1}>
               <Button
-                
+                onClick={(e) => sendMessage(e)}
               >
                 Send
               </Button>

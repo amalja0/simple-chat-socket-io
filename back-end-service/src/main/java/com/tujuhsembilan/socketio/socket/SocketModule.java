@@ -25,9 +25,9 @@ public class SocketModule {
     public SocketModule(SocketIOServer server, SocketService socketService) {
         this.server = server;
         this.socketService = socketService;
-        server.addConnectListener(onConnected());
-        server.addDisconnectListener(onDisconnected());
-        server.addEventListener("send_message", Message.class, onChatReceived());
+        server.addConnectListener(this.onConnected());
+        server.addDisconnectListener(this.onDisconnected());
+        server.addEventListener("send_message", Message.class, this.onChatReceived());
     }
 
     private DataListener<Message> onChatReceived() {
